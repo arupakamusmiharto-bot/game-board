@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controller Peserta</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: 'Arial', sans-serif; padding: 20px; text-align: center; background: #f8f9fa; }
+        h2 { margin-bottom: 20px; color: #333; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .btn { padding: 20px; font-size: 1.1rem; border-radius: 10px; border: 2px solid #007bff; background: #ffffff; color: #007bff; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .btn:active { background: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <h2 id="teamName">Memilih Tim...</h2>
+    <div class="btn-grid" id="btnContainer"></div>
+
+    <script>
+        const socket = io();
+        // Membaca tim dari parameter URL (?role=p1 atau ?role=p2)
+        const urlParams = new URLSearchParams(window.location.search);
+        const myRole = urlParams.get('role') || 'p1';
+
+        socket.emit('join_role', myRole);
+
+        socket.on('assigned_team', (data) => {
+            document.getElementById('teamName').textContent = "Kamu: " + data.name;
+        });
+
+        socket.on('update_game', (data) => {
+            if (data.winner) {
+                document.getElementById('teamName').textContent = "Permainan Selesai!";
+                document.getElementById('btnContainer').innerHTML = '';
+                return;
+            }
+
+            const container = document.getElementById('btnContainer');
+            container.innerHTML = '';
+            
+            data.question.opts.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.textContent = opt;
+                btn.onclick = () => {
+                    socket.emit('submit_answer', { team: myRole, answerIndex: idx });
+                };
+                container.appendChild(btn);
+            });
+        });
+    </script>
+</body>
+</html>
