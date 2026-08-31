@@ -41,7 +41,7 @@ io.on('connection', (socket) => {
             gameState.players.p2 = socket.id;
             socket.emit('assigned_team', { team: 'p2', name: 'Tim Hijau (Kanan)' });
         }
-        
+
         // Broadcast data awal lengkap dengan skor
         io.emit('update_game', {
             ropePosition: gameState.ropePosition,
@@ -62,7 +62,7 @@ io.on('connection', (socket) => {
 
         if (isCorrect) {
             if (data.team === 'p1') {
-                gameState.ropePosition -= 10; 
+                gameState.ropePosition -= 10;
                 gameState.scores.p1.points += 10; // Tambah 10 poin tiap benar
             }
             if (data.team === 'p2') {
@@ -100,6 +100,7 @@ io.on('connection', (socket) => {
     });
 
     // Reset Ronde (Posisi tali & kuis kembali ke awal, skor TETAP disimpan)
+    // Biasanya dipanggil SETELAH ada pemenang, lewat tombol "RONDE SELANJUTNYA"
     socket.on('restart_game', () => {
         gameState.ropePosition = 50;
         gameState.currentQuestion = 0;
@@ -109,6 +110,26 @@ io.on('connection', (socket) => {
             winner: null,
             scores: gameState.scores
         });
+    });
+
+    // === BARU ===
+    // Reset Ronde PAKSA oleh Admin — bisa dipanggil KAPAN SAJA
+    // baik game masih berjalan maupun sudah ada pemenang. Skor & wins TETAP.
+    socket.on('force_reset_round', () => {
+        gameState.ropePosition = 50;
+        // currentQuestion sengaja TIDAK direset ke 0 secara default,
+        // supaya soal lanjut dari posisi terakhir.
+        // Kalau mau soal juga balik ke awal saat reset paksa, uncomment baris ini:
+        // gameState.currentQuestion = 0;
+
+        io.emit('update_game', {
+            ropePosition: gameState.ropePosition,
+            question: questions[gameState.currentQuestion],
+            winner: null,
+            scores: gameState.scores
+        });
+
+        console.log('Ronde direset paksa oleh Admin.');
     });
 
     // Reset Total Skor (Untuk ganti pertandingan/peserta baru)
