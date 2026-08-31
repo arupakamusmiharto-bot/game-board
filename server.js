@@ -19,7 +19,7 @@ let gameState = {
     scores: {
         p1: { wins: 0, points: 0, name: "Tim Merah" },
         p2: { wins: 0, points: 0, name: "Tim Hijau" }
-    }
+  }
 };
 
 const questions = [
